@@ -1,105 +1,68 @@
 import React, { useEffect, useReducer } from "react";
-import TodoList from "./components/TodoList";
-import Textfield from "@atlaskit/textfield";
-import Button from "@atlaskit/button";
-// import { v4 as uuidv4 } from "uuid";
-import { todoReducer, initialState} from "./reducers/todoreducers";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { todoReducer, initialState } from "./reducers/todoreducers";
+import TodoListPage from "./components/TodoListPage";
+import TodoDetailPage from "./components/TodoDetailPage";
 
 const TODO_APP_STORAGE_KEY = "TODO_APP";
 
 function App() {
-  // reducerstate
   const [state, dispatch] = useReducer(todoReducer, initialState);
-  const { todoList, titleInput, descInput, filter} = state;
-  
+  const { todoList, filter } = state;
+
   // load từ localStorage
   useEffect(() => {
     const storagedTodoList = localStorage.getItem(TODO_APP_STORAGE_KEY);
     if (storagedTodoList) {
-      dispatch({ type:"LOAD_TODO",payload: JSON.parse(storagedTodoList)});
+      dispatch({ type: "LOAD_TODOS", payload: JSON.parse(storagedTodoList) });
     }
   }, []);
 
   // lưu vào localStorage khi todoList thay đổi
   useEffect(() => {
-    if(todoList.length > 0){
+    if(todoList.length > 0 ){
       localStorage.setItem(TODO_APP_STORAGE_KEY, JSON.stringify(todoList));
     }
-  },[todoList]);
+    }, [todoList]);
 
-  // handle input change
-  const onTitleChange = (e) => 
+  const onTitleChange = (e) =>
     dispatch({ type: "SET_TITLE", payload: e.target.value });
   const onDescChange = (e) =>
-    dispatch({type: "SET_DESC" ,payload: e.target.value});
+    dispatch({ type: "SET_DESC", payload: e.target.value });
 
-  // thêm công việc
-  const onAddBtnClick = () => dispatch({ type: "ADD_TODO"});
+  const onAddBtnClick = () => dispatch({ type: "ADD_TODO" });
+  const onCheckBtnClick = (id) =>
+    dispatch({ type: "TOGGLE_TODO", payload: id });
 
-  // toggle complete
-  const onCheckBtnClick = (id) => 
-    dispatch({ type: "TOGGLE_TODO", payload: id});
-
-  // lọc todo theo tab
   const filteredTodos = todoList.filter((todo) =>
     filter === "todo" ? !todo.isCompleted : todo.isCompleted
   );
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto", marginTop: "40px" }}>
-      <h2 style={{ textAlign: "center" }}>My Todos</h2>
-
-      <div
-        style={{
-          background: "#333",
-          padding: "20px",
-          borderRadius: "8px",
-          color: "white",
-        }}
-      >
-        <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-          <Textfield
-            name="title"
-            placeholder="What's the title of your To Do?"
-            value={titleInput}
-            onChange={onTitleChange}
-          />
-          <Textfield
-            name="description"
-            placeholder="What's the description of your To Do?"
-            value={descInput}
-            onChange={onDescChange}
-          />
-          <Button
-            appearance="primary"
-            isDisabled={!titleInput}
-            onClick={onAddBtnClick}
-          >
-            Add
-          </Button>
-        </div>
-
-        {/* Filter tabs */}
-        <div style={{ marginTop: "10px" }}>
-          <Button
-            appearance={filter === "todo" ? "primary" : "default"}
-            onClick={() => dispatch({ type: "SET_FILTER", payload: "todo"})}
-          >
-            To Do
-          </Button>
-          <Button
-            appearance={filter === "completed" ? "primary" : "default"}
-            onClick={() => dispatch({type: "SET_FILTER", payload: "completed"})}
-            style={{ marginLeft: "10px" }}
-          >
-            Completed
-          </Button>
-        </div>
-      </div>
-
-      {/* Hiển thị danh sách */}
-      <TodoList todoList={filteredTodos} onCheckBtnClick={onCheckBtnClick} />
-    </div>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <TodoListPage
+              state={state}
+              dispatch={dispatch}
+              filteredTodos={filteredTodos}
+              onTitleChange={onTitleChange}
+              onDescChange={onDescChange}
+              onAddBtnClick={onAddBtnClick}
+              onCheckBtnClick={onCheckBtnClick}
+            />
+          }
+        />
+        <Route 
+          path="/todo/:id"
+          element = {
+            <TodoDetailPage todos = {todoList}/>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

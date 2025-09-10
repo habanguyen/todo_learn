@@ -1,14 +1,15 @@
 import { v4 as uuidv4 } from "uuid";
+
 export const initialState = {
-    todoList: [],
-    titleInput:"",
-    descInput:"",
-    filter:"todo", // Status - action
+  todoList: [],
+  titleInput: "",
+  descInput: "",
+  filter: "todo", // Status - action
 };
 
 export const todoReducer = (state, action) => {
   switch (action.type) {
-    case "LOAD_TODO":
+    case "LOAD_TODOS":
       return { ...state, todoList: action.payload };
 
     case "SET_TITLE":
@@ -19,20 +20,22 @@ export const todoReducer = (state, action) => {
 
     case "ADD_TODO":
       if (!state.titleInput.trim() || !state.descInput.trim()) return state;
+
+      const newTodo = {
+        id: uuidv4(),
+        title: state.titleInput,
+        description: state.descInput,
+        isCompleted: false,
+      };
+
+      console.log(" New todo created:", newTodo); // log để test id, title, desc
+
       return {
         ...state,
-        todoList: [
-          {
-            id: uuidv4(),
-            title: state.titleInput,
-            description: state.descInput,
-            isCompleted: false,
-          },
-          ...state.todoList,
-        ],
+        todoList: [newTodo, ...state.todoList],
         titleInput: "",
         descInput: "",
-        filter: "todo", 
+        filter: "todo",
       };
 
     case "TOGGLE_TODO":

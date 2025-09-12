@@ -20,10 +20,34 @@ function App() {
 
   // lưu vào localStorage khi todoList thay đổi
   useEffect(() => {
-    if(todoList.length > 0 ){
-      localStorage.setItem(TODO_APP_STORAGE_KEY, JSON.stringify(todoList));
-    }
-    }, [todoList]);
+    localStorage.setItem(TODO_APP_STORAGE_KEY, JSON.stringify(todoList));
+  }, [todoList]);
+
+  // auto delete & auto expire
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+
+      todoList.forEach((todo) => {
+        // hết hạn
+        if (todo.expireAt && now >= todo.expireAt) {
+          dispatch({ type: "AUTO_DELETE", payload: { id: todo.id } });
+        }
+
+        // xóa sau khi hoàn thành
+        if (
+          todo.isCompleted &&
+          todo.autoDeleteAfter &&
+          todo.completedAt &&
+          now >= todo.completedAt + todo.autoDeleteAfter
+        ) {
+          dispatch({ type: "AUTO_DELETE", payload: { id: todo.id } });
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [todoList]);
 
   const onTitleChange = (e) =>
     dispatch({ type: "SET_TITLE", payload: e.target.value });
@@ -37,6 +61,24 @@ function App() {
   const filteredTodos = todoList.filter((todo) =>
     filter === "todo" ? !todo.isCompleted : todo.isCompleted
   );
+
+  const onSetExpire = (id) => {
+    const minutes = prompt("Hết hạn sau bao nhiêu phút?");
+    if (minutes && !isNaN(minutes)) {
+      const expireAt = Date.now() + minutes * 60 * 1000;
+      dispatch({ type: "SET_TIMER", payload: { id, expireAt } });
+    }
+  };
+
+  const onSetAutodeleteAfter = (id) => {
+    const minutes = prompt("Xoá sau bao nhiêu phút khi hoàn thành?");
+    if (minutes && !isNaN(minutes)) {
+      dispatch({
+        type: "SET_AUTO_DELETE_AFTER",
+        payload: { id, ms: minutes * 60 * 1000 },
+      });
+    }
+  };
 
   return (
     <Router>
@@ -52,14 +94,14 @@ function App() {
               onDescChange={onDescChange}
               onAddBtnClick={onAddBtnClick}
               onCheckBtnClick={onCheckBtnClick}
+              onSetExpire={onSetExpire}
+              onSetAutodeleteAfter={onSetAutodeleteAfter}
             />
           }
         />
-        <Route 
+        <Route
           path="/todo/:id"
-          element = {
-            <TodoDetailPage todos = {todoList}/>
-          }
+          element={<TodoDetailPage todos={todoList} />}
         />
       </Routes>
     </Router>

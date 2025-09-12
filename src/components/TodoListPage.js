@@ -11,8 +11,10 @@ function TodoListPage({
   onDescChange,
   onAddBtnClick,
   onCheckBtnClick,
+  onSetExpire,
+  onSetAutodeleteAfter,
 }) {
-  const { todoList, titleInput, descInput, filter } = state;
+  const { todoList, titleInput, descInput, filter, expireAtInput, autoDeleteAfterInput } = state;
 
   const filteredTodos = todoList.filter((todo) =>
     filter === "todo" ? !todo.isCompleted : todo.isCompleted
@@ -43,6 +45,31 @@ function TodoListPage({
             value={descInput}
             onChange={onDescChange}
           />
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          <input
+            type="datetime-local"
+            value={expireAtInput || ""}
+            onChange={(e) =>
+              dispatch({ type: "SET_EXPIRE_AT_INPUT", payload: e.target.value })
+            }
+            style={{ flex: 1, padding: "5px" }}
+          />
+
+          <input
+            type="number"
+            min="1"
+            placeholder="Auto delete (minutes)"
+            value={autoDeleteAfterInput || ""}
+            onChange={(e) =>
+              dispatch({
+                type: "SET_AUTODELETE_INPUT",
+                payload: Number(e.target.value),
+              })
+            }
+            style={{ flex: 1, padding: "5px" }}
+          />
+
+        </div>
           <Button
             appearance="primary"
             isDisabled={!titleInput}
@@ -73,7 +100,7 @@ function TodoListPage({
       </div>
 
       {/* Hiển thị danh sách */}
-      <TodoList todoList={filteredTodos} onCheckBtnClick={onCheckBtnClick} />
+      <TodoList todoList={filteredTodos} onCheckBtnClick={onCheckBtnClick} onSetExpire ={onSetExpire} onSetAutodeleteAfter={onSetAutodeleteAfter} />
     </div>
   );
 }
